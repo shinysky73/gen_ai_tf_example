@@ -14,14 +14,8 @@ import streamlit as st
 
 from google.cloud import aiplatform
 
-
-
-
-
-def main():
-
-    load_dotenv()
-
+@st.cache_resource
+def data_load():
     path = "temp/HANBIT_Google_Cloud_Platform.pdf"
     pdf_reader = PdfReader(path)
     text = ""
@@ -40,6 +34,19 @@ def main():
     embeddings = VertexAIEmbeddings(model_name="textembedding-gecko-multilingual@latest")
     knowledge_base = FAISS.from_texts(chunks, embeddings)
 
+    return knowledge_base
+
+
+def main():
+
+    st.set_page_config(page_title="Google Cloud Platform",
+                    page_icon="👩‍⚕️", 
+                    initial_sidebar_state="expanded")   
+
+    load_dotenv()
+
+    knowledge_base = data_load()
+
     llm = VertexAI(temperature=0, model_name="text-bison-32k", max_output_tokens=512)
     prompt_template = """Answer the question as precise as possible using the provided context. If the answer is
                     not contained in the context, say "answer not available in context" \n\n
@@ -51,9 +58,7 @@ def main():
         template=prompt_template, input_variables=["context", "question"]
     )
 
-    st.set_page_config(page_title="Google Cloud Platform",
-                    page_icon="👩‍⚕️", 
-                    initial_sidebar_state="expanded")   
+
          
 
     # 버거 메뉴 + footer 수정
